@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>10% Media LLC — Team Intranet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --orange: #D85A30;
+      --ol: #E8744A;
+      --obg: #FEF0EB;
+      --surface: #F7F5F2;
+      --surface2: #FFFFFF;
+      --border: #E4E0DA;
+      --text: #1A1814;
+      --muted: #7A746C;
+      --sidebar: #FFFFFF;
+    }
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--text); }
+    #app { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: 230px; flex-shrink: 0; background: var(--sidebar);
+      border-right: 1px solid var(--border); display: flex; flex-direction: column;
+    }
+    .logo-area { padding: 24px 22px 20px; border-bottom: 1px solid var(--border); }
+    .logo-badge { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      width: 36px; height: 36px; background: var(--orange); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Serif Display', serif; font-size: 14px; color: #fff; flex-shrink: 0;
+    }
+    .logo-text { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.3; }
+    .logo-sub { font-size: 11px; color: var(--muted); font-weight: 300; }
+    nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-section {
+      font-size: 10px; text-transform: uppercase; letter-spacing: .12em;
+      color: var(--muted); padding: 16px 22px 6px; font-weight: 500;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 9px 22px;
+      cursor: pointer; font-size: 13px; color: var(--muted);
+      transition: all .15s; border-left: 2px solid transparent;
+    }
+    .nav-item:hover { color: var(--text); background: var(--surface); }
+    .nav-item.active { color: var(--orange); background: var(--obg); border-left-color: var(--orange); }
+    .nav-icon { width: 16px; height: 16px; opacity: .6; flex-shrink: 0; }
+    .nav-item.active .nav-icon { opacity: 1; }
+    .badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--orange); color: #fff; font-size: 9px; font-weight: 500;
+      min-width: 16px; height: 16px; border-radius: 8px; padding: 0 4px; margin-left: auto;
+    }
+    .user-footer {
+      padding: 16px 22px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .user-avatar {
+      width: 32px; height: 32px; border-radius: 50%; background: var(--orange);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 500; color: #fff; flex-shrink: 0;
+    }
+    .user-name { font-size: 13px; font-weight: 500; color: var(--text); }
+    .user-role { font-size: 11px; color: var(--muted); }
+
+    /* ── MAIN ── */
+    #main { flex: 1; overflow: hidden; background: var(--surface); display: flex; flex-direction: column; }
+    .page { display: none; flex: 1; overflow-y: auto; padding: 32px 36px; }
+    .page.active { display: block; }
+    #page-viewer { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+    #page-viewer.active { display: flex; }
+
+    /* ── VIEWER ── */
+    .viewer-topbar {
+      display: flex; align-items: center; gap: 14px; padding: 14px 24px;
+      background: #fff; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .viewer-back {
+      display: flex; align-items: center; gap: 7px; padding: 7px 14px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
+      color: var(--muted); font-size: 12px; cursor: pointer; transition: all .15s;
+      font-family: 'DM Sans', sans-serif; white-space: nowrap;
+    }
+    .viewer-back:hover { border-color: var(--orange); color: var(--orange); }
+    .viewer-doc-name { font-size: 14px; font-weight: 500; color: var(--text); flex: 1; }
+    .viewer-category {
+      font-size: 11px; color: var(--muted); background: var(--surface);
+      padding: 4px 10px; border-radius: 5px; white-space: nowrap;
+    }
+    .viewer-frame-wrap { flex: 1; overflow: hidden; background: #E8E4DF; position: relative; }
+    .viewer-frame-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
+    .viewer-loading {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; background: #E8E4DF;
+      gap: 12px; font-size: 13px; color: var(--muted); z-index: 2;
+    }
+    .viewer-spinner {
+      width: 28px; height: 28px; border: 2px solid var(--border);
+      border-top-color: var(--orange); border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── PAGE COMPONENTS ── */
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; gap: 16px; }
+    .page-titles { flex: 1; }
+    .page-title { font-family: 'DM Serif Display', serif; font-size: 30px; color: var(--text); font-weight: 400; line-height: 1.2; margin-bottom: 5px; }
+    .page-subtitle { font-size: 13px; color: var(--muted); font-weight: 300; }
+    .last-synced { font-size: 11px; color: var(--muted); margin-top: 5px; }
+    .refresh-btn {
+      display: flex; align-items: center; gap: 7px; padding: 8px 14px;
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-size: 12px; font-family: 'DM Sans', sans-serif;
+      cursor: pointer; transition: all .15s; white-space: nowrap; flex-shrink: 0; margin-top: 5px;
+    }
+    .refresh-btn:hover { border-color: var(--orange); color: var(--orange); }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+    .stat-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+    .stat-num { font-family: 'DM Serif Display', serif; font-size: 34px; color: var(--orange); line-height: 1; }
+    .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 12px; font-weight: 500; }
+    .announce-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .announce-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px 20px; display: flex; gap: 14px; align-items: flex-start; transition: border-color .15s;
+    }
+    .announce-card:hover { border-color: var(--orange); }
+    .adot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); margin-top: 6px; flex-shrink: 0; }
+    .adot.read { background: #D4CEC8; }
+    .atitle { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+    .ameta { font-size: 12px; color: var(--muted); }
+    .abody { font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.6; }
+    .tag { display: inline-block; background: var(--obg); color: var(--orange); font-size: 10px; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 500; }
+    .quick-links { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .ql { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 18px; text-align: center; cursor: pointer; transition: all .15s; }
+    .ql:hover { border-color: var(--orange); background: var(--obg); }
+    .ql-icon { font-size: 24px; margin-bottom: 8px; }
+    .ql-label { font-size: 13px; color: var(--text); font-weight: 500; }
+    .ql-desc { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    /* ── POLICIES ── */
+    .pol-group { margin-bottom: 24px; }
+    .pol-group-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: .1em;
+      color: var(--muted); margin-bottom: 10px; font-weight: 500;
+      padding-bottom: 8px; border-bottom: 1px solid var(--border);
+    }
+    .pol-row {
+      display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+      background: #fff; border: 1px solid var(--border); border-radius: 9px;
+      margin-bottom: 6px; cursor: pointer; transition: all .15s;
+    }
+    .pol-row:hover { border-color: var(--orange); background: var(--obg); }
+    .pol-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .pol-name { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; }
+    .pol-meta { font-size: 11px; color: var(--muted); white-space: nowrap; }
+    .new-pill { display: inline-block; background: var(--obg); color: var(--orange); font-size: 10px; padding: 1px 7px; border-radius: 4px; margin-left: 7px; font-weight: 500; }
+    .pol-eye { font-size: 14px; color: var(--muted); }
+
+    /* ── CONTACTS ── */
+    .contact-block { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; margin-bottom: 14px; }
+    .contact-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .contact-logo { width: 44px; height: 44px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: #fff; flex-shrink: 0; text-align: center; line-height: 1.2; }
+    .contact-co { font-size: 15px; font-weight: 500; color: var(--text); }
+    .contact-type { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .contact-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-top: 1px solid var(--border); font-size: 13px; }
+    .contact-key { color: var(--muted); }
+    .contact-val { color: var(--text); font-weight: 500; font-family: monospace; font-size: 14px; letter-spacing: .03em; }
+    .contact-val a { color: var(--orange); text-decoration: none; }
+    .contact-val a:hover { text-decoration: underline; }
+    .alert-box { background: var(--obg); border: 1px solid #F5C4A8; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; }
+    .alert-title { font-size: 13px; font-weight: 500; color: var(--orange); margin-bottom: 5px; }
+    .alert-body { font-size: 13px; color: #7A4030; line-height: 1.6; }
+
+    /* ── DIRECTORY ── */
+    .dir-search {
+      background: #fff; border: 1px solid var(--border); border-radius: 9px;
+      padding: 10px 14px; color: var(--text); font-size: 13px; width: 100%;
+      margin-bottom: 18px; outline: none; font-family: 'DM Sans', sans-serif;
+    }
+    .dir-search:focus { border-color: var(--orange); }
+    .dir-search::placeholder { color: var(--muted); }
+    .dir-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    @media (min-width: 1100px) { .dir-grid { grid-template-columns: repeat(3, 1fr); } }
+    .dir-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; gap: 12px; align-items: center; }
+    .dir-av { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; color: #fff; flex-shrink: 0; }
+    .dir-name { font-size: 13px; font-weight: 500; color: var(--text); }
+    .dir-title { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .dir-dept { font-size: 10px; color: var(--orange); margin-top: 4px; font-weight: 500; }
+
+    /* ── ORG CHART ── */
+    .org-wrap { overflow-x: auto; padding-bottom: 16px; }
+    .org-node { background: #fff; border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; min-width: 120px; text-align: center; }
+    .org-node.ceo { background: var(--obg); border-color: var(--orange); border-width: 1.5px; }
+    .org-av { width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 7px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: #fff; }
+    .org-name { font-size: 12px; font-weight: 500; color: var(--text); }
+    .org-title { font-size: 9px; color: var(--muted); margin-top: 2px; }
+    .org-line { background: var(--border); }
+    .org-v { width: 1px; margin: 0 auto; }
+    .org-h { height: 1px; }
+
+    /* ── BENEFITS CARDS ── */
+    .benefit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+    .benefit-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+    .benefit-name { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .benefit-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══ SIDEBAR ══ -->
+  <div id="sidebar">
+    <div class="logo-area">
+      <div class="logo-badge">
+        <div class="logo-icon">10%</div>
+        <div>
+          <div class="logo-text">10% Media LLC</div>
+          <div class="logo-sub">Team Intranet</div>
+        </div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-section">Workspace</div>
+      <div class="nav-item active" onclick="nav('home',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="nav('announcements',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M2 4a2 2 0 012-2h8a2 2 0 012 2v5a2 2 0 01-2 2H6l-3 3V4z" fill="currentColor"/></svg>
+        Announcements <span class="badge">3</span>
+      </div>
+
+      <div class="nav-section">People</div>
+      <div class="nav-item" onclick="nav('org',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3" r="2" fill="currentColor"/><circle cx="3" cy="12" r="2" fill="currentColor"/><circle cx="13" cy="12" r="2" fill="currentColor"/><path d="M8 5v3M8 8H3v2M8 8h5v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Org Chart
+      </div>
+      <div class="nav-item" onclick="nav('directory',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M8 1a3 3 0 100 6A3 3 0 008 1zm-5 9a5 5 0 0110 0v1H3v-1z" fill="currentColor"/></svg>
+        Directory
+      </div>
+
+      <div class="nav-section">Resources</div>
+      <div class="nav-item" id="nav-hr" onclick="nav('hr',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="3" y="2" width="10" height="12" rx="1.5" fill="currentColor" opacity=".8"/><rect x="5" y="5" width="6" height="1.5" rx=".75" fill="white"/><rect x="5" y="8" width="6" height="1.5" rx=".75" fill="white"/><rect x="5" y="11" width="4" height="1.5" rx=".75" fill="white"/></svg>
+        Policies &amp; Docs
+      </div>
+      <div class="nav-item" onclick="nav('payroll',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" fill="currentColor" opacity=".8"/><circle cx="8" cy="8" r="2" fill="white"/><rect x="3" y="7" width="2" height="2" rx="1" fill="white"/><rect x="11" y="7" width="2" height="2" rx="1" fill="white"/></svg>
+        Payroll
+      </div>
+      <div class="nav-item" onclick="nav('benefits',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M8 14s-6-3.5-6-8a4 4 0 018 0 4 4 0 018 0c0 4.5-6 8-6 8z" fill="currentColor"/></svg>
+        Benefits
+      </div>
+    </nav>
+    <div class="user-footer">
+      <div class="user-avatar">TM</div>
+      <div>
+        <div class="user-name">Taylor M.</div>
+        <div class="user-role">Operations</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MAIN ══ -->
+  <div id="main">
+
+    <!-- DASHBOARD -->
+    <div id="page-home" class="page active">
+      <div class="page-header">
+        <div class="page-titles">
+          <div class="page-title">Good morning ☀️</div>
+          <div class="page-subtitle">Here's what's happening at 10% Media this week</div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num">24</div><div class="stat-label">Team members</div></div>
+        <div class="stat-card"><div class="stat-num">17</div><div class="stat-label">Policies &amp; docs</div></div>
+        <div class="stat-card"><div class="stat-num">Apr 30</div><div class="stat-label" style="color:var(--orange)">Enrollment deadline</div></div>
+      </div>
+      <div class="section-label">Recent announcements</div>
+      <div class="announce-list">
+        <div class="announce-card"><div class="adot"></div><div><div class="atitle">Q2 Planning Kickoff — All Hands <span class="tag">New</span></div><div class="ameta">Apr 7, 2026 · Dan Harris</div></div></div>
+        <div class="announce-card"><div class="adot"></div><div><div class="atitle">6 new policies added to the intranet <span class="tag">New</span></div><div class="ameta">Apr 7, 2026 · People Ops</div></div></div>
+        <div class="announce-card"><div class="adot read"></div><div><div class="atitle">Podcast reaches 10M downloads milestone</div><div class="ameta">Mar 28, 2026 · Marketing</div></div></div>
+      </div>
+      <div class="section-label">Quick links</div>
+      <div class="quick-links">
+        <div class="ql" onclick="nav('hr', document.getElementById('nav-hr'))"><div class="ql-icon">📋</div><div class="ql-label">Policies &amp; Docs</div><div class="ql-desc">17 documents</div></div>
+        <div class="ql" onclick="nav('payroll',null)"><div class="ql-icon">💳</div><div class="ql-label">Payroll</div><div class="ql-desc">ADP + schedule</div></div>
+        <div class="ql" onclick="nav('benefits',null)"><div class="ql-icon">❤️</div><div class="ql-label">Benefits</div><div class="ql-desc">Harvard Pilgrim · Voya</div></div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS -->
+    <div id="page-announcements" class="page">
+      <div class="page-header"><div class="page-titles"><div class="page-title">Announcements</div><div class="page-subtitle">Company-wide updates from leadership and teams</div></div></div>
+      <div class="announce-list">
+        <div class="announce-card"><div class="adot"></div><div style="flex:1"><div class="atitle">Q2 Planning Kickoff — All Hands <span class="tag">New</span></div><div class="ameta">Apr 7, 2026 · Dan Harris · Leadership</div><div class="abody">Join us Thursday at 10am ET for our Q2 kickoff. We'll cover podcast growth targets, app roadmap, and speaking schedule. Zoom link in calendar invite.</div></div></div>
+        <div class="announce-card"><div class="adot"></div><div style="flex:1"><div class="atitle">6 new policies added to the intranet <span class="tag">New</span></div><div class="ameta">Apr 7, 2026 · People Ops · HR</div><div class="abody">Employment at Will, EEO Policy, Harassment Prevention, Parental Leave, Medical Leave, and Military Service Leave are now live in Policies &amp; Docs.</div></div></div>
+        <div class="announce-card"><div class="adot"></div><div style="flex:1"><div class="atitle">Open Enrollment closes April 30 <span class="tag">New</span></div><div class="ameta">Apr 1, 2026 · People Ops · Benefits</div><div class="abody">Log into your Harvard Pilgrim member portal to review and update your elections before April 30.</div></div></div>
+        <div class="announce-card"><div class="adot read"></div><div style="flex:1"><div class="atitle">Podcast reaches 10M downloads 🎙️</div><div class="ameta">Mar 28, 2026 · Marketing · Milestone</div><div class="abody">We hit 10 million total podcast downloads this week. Thank you to every person on this team who made that possible.</div></div></div>
+      </div>
+    </div>
+
+    <!-- ORG CHART -->
+    <div id="page-org" class="page">
+      <div class="page-header"><div class="page-titles"><div class="page-title">Org Chart</div><div class="page-subtitle">10% Media LLC — as of Q1 2026</div></div></div>
+      <div class="org-wrap">
+        <div style="min-width:640px">
+          <div style="display:flex;justify-content:center;margin-bottom:0">
+            <div class="org-node ceo">
+              <div class="org-av" style="background:#D85A30">DH</div>
+              <div class="org-name">Dan Harris</div>
+              <div class="org-title">CEO &amp; Host</div>
+            </div>
+          </div>
+          <div class="org-line org-v" style="height:20px"></div>
+          <div class="org-line org-h" style="margin:0 100px"></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 40px">
+            <!-- Content -->
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div class="org-line org-v" style="height:20px"></div>
+              <div class="org-node" style="width:100%">
+                <div class="org-av" style="background:#1D9E75">SK</div>
+                <div class="org-name">Sarah K.</div>
+                <div class="org-title">Head of Content</div>
+              </div>
+              <div class="org-line org-v" style="height:12px"></div>
+              <div class="org-line org-h" style="width:60%;align-self:center"></div>
+              <div style="display:flex;gap:6px;width:100%">
+                <div style="display:flex;flex-direction:column;align-items:center;flex:1">
+                  <div class="org-line org-v" style="height:12px"></div>
+                  <div class="org-node" style="width:100%"><div class="org-name" style="font-size:11px">Marcus T.</div><div class="org-title">Sr. Producer</div></div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;flex:1">
+                  <div class="org-line org-v" style="height:12px"></div>
+                  <div class="org-node" style="width:100%"><div class="org-name" style="font-size:11px">Tom B.</div><div class="org-title">Editor</div></div>
+                </div>
+              </div>
+            </div>
+            <!-- Marketing -->
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div class="org-line org-v" style="height:20px"></div>
+              <div class="org-node" style="width:100%">
+                <div class="org-av" style="background:#185FA5">PR</div>
+                <div class="org-name">Priya R.</div>
+                <div class="org-title">Head of Marketing</div>
+              </div>
+              <div class="org-line org-v" style="height:12px"></div>
+              <div class="org-node" style="width:100%"><div class="org-name" style="font-size:11px">Rosa M.</div><div class="org-title">Social Media</div></div>
+            </div>
+            <!-- Operations -->
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div class="org-line org-v" style="height:20px"></div>
+              <div class="org-node" style="width:100%">
+                <div class="org-av" style="background:#7F77DD">TM</div>
+                <div class="org-name">Taylor M.</div>
+                <div class="org-title">Operations Mgr</div>
+              </div>
+              <div class="org-line org-v" style="height:12px"></div>
+              <div class="org-node" style="width:100%"><div class="org-name" style="font-size:11px">Alex C.</div><div class="org-title">People Ops</div></div>
+            </div>
+            <!-- Product -->
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div class="org-line org-v" style="height:20px"></div>
+              <div class="org-node" style="width:100%">
+                <div class="org-av" style="background:#BA7517">JL</div>
+                <div class="org-name">James L.</div>
+                <div class="org-title">App Product Lead</div>
+              </div>
+              <div class="org-line org-v" style="height:12px"></div>
+              <div class="org-node" style="width:100%"><div class="org-name" style="font-size:11px">Elena V.</div><div class="org-title">Engineer</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIRECTORY -->
+    <div id="page-directory" class="page">
+      <div class="page-header"><div class="page-titles"><div class="page-title">Team Directory</div><div class="page-subtitle">Everyone at 10% Media LLC</div></div></div>
+      <input class="dir-search" type="text" placeholder="Search by name, title, or department…" oninput="filterDir(this.value)" />
+      <div class="dir-grid" id="dir-grid"></div>
+    </div>
+
+    <!-- POLICIES LIST -->
+    <div id="page-hr" class="page">
+      <div class="page-header">
+        <div class="page-titles">
+          <div class="page-title">Policies &amp; Documents</div>
+          <div class="page-subtitle">Click any document to read it here · 17 total</div>
+          <div class="last-synced">Last synced: <span id="sync-time"></span></div>
+        </div>
+        <button class="refresh-btn" onclick="alert('To refresh: re-open this page in your browser after updating your Google Drive folder.')">
+          <svg style="width:13px;height:13px" viewBox="0 0 12 12" fill="none"><path d="M10 6A4 4 0 112 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M10 3.5V6h-2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          How to refresh
+        </button>
+      </div>
+
+      <div class="pol-group"><div class="pol-group-label">Employment &amp; Legal</div>
+        <div class="pol-row" onclick="openDoc('Employment at Will','Employment & Legal','13RYf3MQkpZTadzZ05hlGW6E9OrOFCaa2Ww8zQxk9gIg')"><div class="pol-dot" style="background:#D85A30"></div><div class="pol-name">Employment at Will <span class="new-pill">New</span></div><div class="pol-meta">Apr 7, 2026</div><div class="pol-eye">👁</div></div>
+        <div class="pol-row" onclick="openDoc('Equal Employment Opportunity Policy','Employment & Legal','1kSedTSByi4m1NBaOSrBVJVDNy7qS08CQnErULdGfTbs')"><div class="pol-dot" style="background:#D85A30"></div><div class="pol-name">Equal Employment Opportunity Policy <span class="new-pill">New</span></div><div class="pol-meta">Apr 7, 2026</div><div class="pol-eye">👁</div></div>
+        <div class="pol-row" onclick="openDoc('Harassment Prevention Policy','Employment & Legal','1pzx4iiurafZ4_6hOsC4THfqXJEgbb7y4Qf4lwWoupZI')"><div class="pol-dot" style="background:#D85A30"></div><div class="pol-name">Harassment Prevention Policy <span class="new-pill">New</span></div><div class="pol-meta">Apr 7, 2026</div><div class="pol-eye">👁</div></div>
+      </div>
+
+      <div class="pol-group"><div class="pol-group-label">Leave Policies</div>
+        <div class="pol-row" onclick="openDoc('2026 Calendar & Time Off Policy','Leave Policies','1oaSKYhnrGuQz1Jm4EQhQbZ_bDFonFMYmM2B7Bx4d410')"><div class="pol-dot" style="background:#1D9E75"></div><div class="pol-name">2026 Calendar &amp; Time Off Policy</div><div class="pol-meta">Nov 18, 2025</div><div class="pol-eye">👁</div></div>
+        <div class="pol-row" onclick="openDoc('Parental Leave','Leave Policies','1N0XSp6-UWOct08om1yVTv14n6pikh8oleOMAp9W8qEI')"><div class="pol-dot" style="background:#1D9E75"></div><div class="pol-name">Parental Leave <span class="new-pill">New</span></div><div class="pol-meta">Apr 7, 2026</div><div class="pol-eye">👁</div></div>
+        <div class="pol-row" onclick="openDoc('Medical Leave Policy','Leave Policies','1wibCO2bxUm6yIcxDlw-Il9nw40FfeRBrUnQ3mYRtTQE')"><div class="pol-dot" style="background:#1D9E75"></div><div class="pol-name">Medical Leave Policy <span class="new-pill">New</span></div><div class="pol-meta">Apr 7, 2026</div><div class="pol-eye">👁</div></div>
+        <div class="pol-row" onclick="openDoc('Leave Related to Military Service','Leave Policies','13AA2QnB49G_npvM3B47rCGjbluj5nBqwRFMTL-kqZTg')"><div class="pol-dot" style="background:#1D9E75"></div><div class="pol-name">Leave Related to Military Service <span class="new-pill">New</span></div><div class="pol-meta">Apr 7, 2026</div><div class="pol-eye">👁</div></div>
+        <div class="pol-row" onclick="openDoc('2025 Calendar & Time Off Policy','Leave Policies · Archived','1xLesmKiT4SF-xQNhwGkttkftb1gUn53Q227wBoDAlNo')"><div class="pol-dot" style="background:#C8C2BC"></div><div class="pol-name">2025 Calendar &amp; Time Off Policy <span style="color:var(--muted);font-weight:400;font-size:11px">· archived</span></div><div class="pol-meta">Sep 25, 2025</div><div class="pol-eye">👁</div></div>
+      </div>
+
+      <div class="pol-group"><div class="pol-group-label">Performance &amp; HR</div>
+        <div class="pol-row" onclick="openDoc('Performance Improvement Process','Performance & HR','1qI91LeGSLdZrWcYyGIU3yhUiDANREv9E_lVX73oR8VM')"><div class="pol-dot" style="background:#D4537E"></div><div class="pol-name">Performance Improvement Process</div><div class="pol-meta">Dec 10, 2025</div><div class="pol-eye">👁</div></div>
+        <div class="pol-row" onclick="openDoc('Personnel File Documentation & Manager Process Guide','Performance & HR','18y2Hk3nnSPiGfd8Mwt0ABZQtkLL8mrqiqI5Z7KKzxzY')"><div class="pol-dot" style="background:#D4537E"></div><div class="pol-name">Personnel File Documentation &amp; Manager Process Guide</div><div class="pol-meta">Nov 18, 2025</div><div class="pol-eye">👁</div></div>
+      </div>
+
+      <div class="pol-group"><div class="pol-group-label">Compensation &amp; Finance</div>
+        <div class="pol-row" onclick="openDoc('Bonus Plan Overview','Compensation & Finance','1RYGVuxm3_FKYI7ErrydI6GGz5EviWjfLyuUx-8BrMj8')"><div class="pol-dot" style="background:#BA7517"></div><div class="pol-name">Bonus Plan Overview</div><div class="pol-meta">Dec 2, 2025</div><div class="pol-eye">👁</div></div>
+        <div class="pol-row" onclick="openDoc('Bonus Plan Addendum — January 2026','Compensation & Finance','1tbAgcf6qJFrmpDawfmMROykNdVJ_hSOwDTDzlgPbd_E')"><div class="pol-dot" style="background:#BA7517"></div><div class="pol-name">Bonus Plan Addendum — January 2026</div><div class="pol-meta">Dec 2, 2025</div><div class="pol-eye">👁</div></div>
+        <div class="pol-row" onclick="openDoc('Budget Policy – 2026','Compensation & Finance','1wKaFIaquM0oL4e8yAVmNC0cpRQBYrgT8MZ8It3eyQog')"><div class="pol-dot" style="background:#BA7517"></div><div class="pol-name">Budget Policy – 2026</div><div class="pol-meta">Dec 10, 2025</div><div class="pol-eye">👁</div></div>
+      </div>
+
+      <div class="pol-group"><div class="pol-group-label">Expenses &amp; Reimbursement</div>
+        <div class="pol-row" onclick="openDoc('Ramp Expense Process','Expenses & Reimbursement','1Y1NYnRLzZg7-MG3zblQgfY-cpzqkK9kKbUA2_5vcNIM')"><div class="pol-dot" style="background:#185FA5"></div><div class="pol-name">Ramp Expense Process — How to Pay for Things</div><div class="pol-meta">Nov 18, 2025</div><div class="pol-eye">👁</div></div>
+        <div class="pol-row" onclick="openDoc('Mileage Reimbursement Policy','Expenses & Reimbursement','13_aNWvwfEV2cNJGzOfxZQM9h9WnoOj924uwDFX1ZOAw')"><div class="pol-dot" style="background:#185FA5"></div><div class="pol-name">Mileage Reimbursement Policy</div><div class="pol-meta">Sep 17, 2025</div><div class="pol-eye">👁</div></div>
+      </div>
+
+      <div class="pol-group"><div class="pol-group-label">Templates</div>
+        <div class="pol-row" onclick="openDoc('Manager Documentation Template','Templates','1hBUkPiuL2ccAmqdCIG3vxKZgdN9HUja3A_yf7oHAA0o')"><div class="pol-dot" style="background:#534AB7"></div><div class="pol-name">Manager Documentation Template</div><div class="pol-meta">Dec 10, 2025</div><div class="pol-eye">👁</div></div>
+        <div class="pol-row" onclick="openDoc('Project Proposal Template','Templates','11HlQhql_agtIxhkaFOk0_rFNkM_FkAuyvRWMgEQZ2dI')"><div class="pol-dot" style="background:#534AB7"></div><div class="pol-name">Project Proposal Template</div><div class="pol-meta">Nov 18, 2025</div><div class="pol-eye">👁</div></div>
+      </div>
+    </div>
+
+    <!-- DOCUMENT VIEWER -->
+    <div id="page-viewer">
+      <div class="viewer-topbar">
+        <button class="viewer-back" onclick="closeDoc()">← Back to Policies</button>
+        <div class="viewer-doc-name" id="viewer-title">Document</div>
+        <div class="viewer-category" id="viewer-cat"></div>
+      </div>
+      <div class="viewer-frame-wrap">
+        <div class="viewer-loading" id="viewer-loading">
+          <div class="viewer-spinner"></div>
+          <span>Loading document…</span>
+        </div>
+        <iframe id="doc-iframe" onload="document.getElementById('viewer-loading').style.display='none'"></iframe>
+      </div>
+    </div>
+
+    <!-- PAYROLL -->
+    <div id="page-payroll" class="page">
+      <div class="page-header"><div class="page-titles"><div class="page-title">Payroll</div><div class="page-subtitle">ADP is our payroll provider — use the contacts below for help</div></div></div>
+      <div class="contact-block">
+        <div class="contact-header"><div class="contact-logo" style="background:#D85A30">ADP</div><div><div class="contact-co">ADP Payroll</div><div class="contact-type">Payroll processing, direct deposit, W-2s, tax forms</div></div></div>
+        <div class="contact-row"><span class="contact-key">Employee support line</span><span class="contact-val">1-844-227-5237</span></div>
+        <div class="contact-row"><span class="contact-key">General / new services</span><span class="contact-val">1-800-225-5237</span></div>
+        <div class="contact-row"><span class="contact-key">Employee portal</span><span class="contact-val"><a href="https://my.adp.com" target="_blank">my.adp.com ↗</a></span></div>
+        <div class="contact-row"><span class="contact-key">Hours</span><span class="contact-key">24/7 automated · Live support Mon–Fri</span></div>
+      </div>
+      <div class="alert-box">
+        <div class="alert-title">Need payroll help?</div>
+        <div class="alert-body">Contact <strong>Alex C. in People Ops</strong> first — ADP cannot make changes without employer authorization.</div>
+      </div>
+      <div class="section-label">Payroll schedule</div>
+      <div class="contact-block" style="margin-bottom:0">
+        <div class="contact-row" style="border:none;padding-top:0"><span class="contact-key">Pay frequency</span><span class="contact-val" style="font-family:inherit;font-size:13px">Bi-weekly (every other Friday)</span></div>
+        <div class="contact-row"><span class="contact-key">Direct deposit</span><span class="contact-val" style="font-family:inherit;font-size:13px">Typically 1–2 days before payday</span></div>
+        <div class="contact-row"><span class="contact-key">Timesheet deadline</span><span class="contact-val" style="font-family:inherit;font-size:13px">Wednesday prior to pay week</span></div>
+        <div class="contact-row"><span class="contact-key">W-2 delivery</span><span class="contact-val" style="font-family:inherit;font-size:13px">By Jan 31 each year via ADP portal</span></div>
+      </div>
+    </div>
+
+    <!-- BENEFITS -->
+    <div id="page-benefits" class="page">
+      <div class="page-header"><div class="page-titles"><div class="page-title">Benefits</div><div class="page-subtitle">Your 10% Media benefits package — open enrollment closes Apr 30</div></div></div>
+      <div class="contact-block">
+        <div class="contact-header"><div class="contact-logo" style="background:#185FA5;font-size:10px">HP</div><div><div class="contact-co">Harvard Pilgrim Health Care</div><div class="contact-type">Medical, dental &amp; vision · Company covers 80% of premiums</div></div></div>
+        <div class="contact-row"><span class="contact-key">Member services</span><span class="contact-val">1-888-333-4742</span></div>
+        <div class="contact-row"><span class="contact-key">TTY</span><span class="contact-val">711</span></div>
+        <div class="contact-row"><span class="contact-key">Member portal</span><span class="contact-val"><a href="https://www.harvardpilgrim.org" target="_blank">harvardpilgrim.org ↗</a></span></div>
+        <div class="contact-row"><span class="contact-key">Hours</span><span class="contact-key">Mon/Tue/Thu 8am–6pm · Wed 10am–6pm · Fri 8am–5:30pm ET</span></div>
+      </div>
+      <div class="contact-block">
+        <div class="contact-header"><div class="contact-logo" style="background:#BA7517;font-size:11px">VOYA</div><div><div class="contact-co">Voya Financial</div><div class="contact-type">401(k) retirement plan · Company matches 4% · Eligible after 90 days</div></div></div>
+        <div class="contact-row"><span class="contact-key">Participant services</span><span class="contact-val">1-800-584-6001</span></div>
+        <div class="contact-row"><span class="contact-key">Outside U.S.</span><span class="contact-val">904-791-2409</span></div>
+        <div class="contact-row"><span class="contact-key">Participant portal</span><span class="contact-val"><a href="https://www.voya.com" target="_blank">voya.com ↗</a></span></div>
+        <div class="contact-row"><span class="contact-key">Hours</span><span class="contact-key">Mon–Fri 8am–9pm ET (closed NYSE holidays)</span></div>
+      </div>
+      <div class="benefit-grid">
+        <div class="benefit-card"><div class="benefit-name">Wellness Stipend</div><div class="benefit-desc">$75/month toward the 10% Happier app, gym membership, or wellness expenses. Submit via Ramp.</div></div>
+        <div class="benefit-card"><div class="benefit-name">Home Office Stipend</div><div class="benefit-desc">Up to $500/year for home office equipment and ergonomic improvements. Request via People Ops.</div></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+  // ── Directory data ──
+  const people = [
+    {name:"Dan Harris",title:"CEO & Host",dept:"Leadership",color:"#D85A30"},
+    {name:"Taylor M.",title:"Operations Manager",dept:"Operations",color:"#7F77DD"},
+    {name:"Sarah K.",title:"Head of Podcast",dept:"Content",color:"#1D9E75"},
+    {name:"Marcus T.",title:"Senior Producer",dept:"Content",color:"#1D9E75"},
+    {name:"Priya R.",title:"Head of Marketing",dept:"Marketing",color:"#185FA5"},
+    {name:"James L.",title:"App Product Lead",dept:"Product",color:"#BA7517"},
+    {name:"Elena V.",title:"Software Engineer",dept:"Engineering",color:"#D4537E"},
+    {name:"Alex C.",title:"People Ops",dept:"HR",color:"#D85A30"},
+    {name:"Nina W.",title:"Head of Partnerships",dept:"Business Dev",color:"#185FA5"},
+    {name:"Tom B.",title:"Podcast Editor",dept:"Content",color:"#1D9E75"},
+    {name:"Rosa M.",title:"Social Media Manager",dept:"Marketing",color:"#185FA5"},
+    {name:"Chris O.",title:"Finance Manager",dept:"Finance",color:"#534AB7"}
+  ];
+
+  function initials(n){ return n.split(' ').map(x=>x[0]).join('').toUpperCase(); }
+
+  function renderDir(list){
+    document.getElementById('dir-grid').innerHTML = list.map(p =>
+      `<div class="dir-card">
+        <div class="dir-av" style="background:${p.color}">${initials(p.name)}</div>
+        <div>
+          <div class="dir-name">${p.name}</div>
+          <div class="dir-title">${p.title}</div>
+          <div class="dir-dept">${p.dept}</div>
+        </div>
+      </div>`
+    ).join('');
+  }
+
+  function filterDir(q){
+    q = q.toLowerCase();
+    renderDir(q ? people.filter(p => (p.name+p.title+p.dept).toLowerCase().includes(q)) : people);
+  }
+
+  renderDir(people);
+
+  // ── Navigation ──
+  function nav(id, el){
+    document.querySelectorAll('.page, #page-viewer').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    if(el) el.classList.add('active');
+    else document.querySelectorAll('.nav-item').forEach(n => {
+      if(n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + id + "'")) n.classList.add('active');
+    });
+  }
+
+  // ── Document viewer ──
+  function openDoc(name, category, docId){
+    document.querySelectorAll('.page, #page-viewer').forEach(p => p.classList.remove('active'));
+    document.getElementById('viewer-title').textContent = name;
+    document.getElementById('viewer-cat').textContent = category;
+    document.getElementById('viewer-loading').style.display = 'flex';
+    document.getElementById('doc-iframe').src = `https://docs.google.com/document/d/${docId}/preview`;
+    document.getElementById('page-viewer').classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('nav-hr').classList.add('active');
+  }
+
+  function closeDoc(){
+    document.getElementById('doc-iframe').src = '';
+    nav('hr', document.getElementById('nav-hr'));
+  }
+
+  // ── Sync timestamp ──
+  const t = new Date();
+  document.getElementById('sync-time').textContent =
+    t.toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}) + ' at ' +
+    t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+</script>
+</body>
+</html>

@@ -260,7 +260,7 @@
           </div>
         </a>
 
-        <a href="https://taylor634.github.io/cash-flow-dashboard/" target="_blank" style="text-decoration:none;display:block;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all .2s;cursor:pointer" onmouseover="this.style.borderColor='var(--orange)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 20px rgba(216,90,48,.12)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)';this.style.boxShadow='none'">
+        <div onclick="openCashFlow()" style="text-decoration:none;display:block;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all .2s;cursor:pointer" onmouseover="this.style.borderColor='var(--orange)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 20px rgba(216,90,48,.12)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)';this.style.boxShadow='none'">
           <div style="overflow:hidden;height:200px;background:#0a3d2e;position:relative;display:flex;align-items:center;justify-content:center">
             <svg width="80" height="80" viewBox="0 0 80 80" fill="none"><rect x="8" y="44" width="10" height="28" rx="2" fill="#1D9E75" opacity=".7"/><rect x="24" y="32" width="10" height="40" rx="2" fill="#1D9E75" opacity=".85"/><rect x="40" y="20" width="10" height="52" rx="2" fill="#1D9E75"/><rect x="56" y="28" width="10" height="44" rx="2" fill="#1D9E75" opacity=".9"/><polyline points="13,48 29,36 45,24 61,32" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
             <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 60%,rgba(10,61,46,.95))"></div>
@@ -272,7 +272,7 @@
             </div>
             <div style="font-size:12px;color:var(--muted);line-height:1.5">Monthly cash flow tracker — income, expenses, and net cash position across all accounts.</div>
           </div>
-        </a>
+        </div>
 
       </div>
     </div>
@@ -622,5 +622,43 @@ const t=new Date();
 document.getElementById('sync-time').textContent=t.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' at '+t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 
 </script>
+
+  <!-- Cash Flow password modal -->
+  <div id="cf-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:14px;padding:32px 28px;width:320px;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+      <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--text);margin-bottom:6px">Restricted Access</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Enter the password to open the Cash Flow Dashboard.</div>
+      <input id="cf-pw" type="password" placeholder="Password" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:8px" onkeydown="if(event.key==='Enter')cfSubmit()" />
+      <div id="cf-err" style="font-size:12px;color:#c0392b;min-height:18px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="cfClose()" style="flex:1;padding:10px;border:1px solid var(--border);background:#fff;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted)">Cancel</button>
+        <button onclick="cfSubmit()" style="flex:1;padding:10px;border:none;background:var(--orange);border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;color:#fff;font-weight:500">Open</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    function openCashFlow(){
+      var m=document.getElementById('cf-modal');
+      m.style.display='flex';
+      document.getElementById('cf-pw').value='';
+      document.getElementById('cf-err').textContent='';
+      setTimeout(function(){document.getElementById('cf-pw').focus()},50);
+    }
+    function cfClose(){
+      document.getElementById('cf-modal').style.display='none';
+    }
+    function cfSubmit(){
+      var pw=document.getElementById('cf-pw').value;
+      if(pw==='Cashistight2026'){
+        cfClose();
+        window.open('https://taylor634.github.io/cash-flow-dashboard/','_blank');
+      } else {
+        document.getElementById('cf-err').textContent='Incorrect password. Try again.';
+        document.getElementById('cf-pw').value='';
+        document.getElementById('cf-pw').focus();
+      }
+    }
+    document.getElementById('cf-modal').addEventListener('click',function(e){if(e.target===this)cfClose();});
+  </script>
 </body>
 </html>

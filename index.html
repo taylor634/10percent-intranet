@@ -697,5 +697,24 @@ document.getElementById('sync-time').textContent=t.toLocaleDateString('en-US',{m
     }
     document.getElementById('cf-modal').addEventListener('click',function(e){if(e.target===this)cfClose();});
   </script>
+  <script>
+    // Hash-based deep linking: e.g. #payroll, #benefits, #dashboards, #hr
+    (function(){
+      var validTabs = ['home','announcements','dashboards','org','directory','hr','payroll','benefits'];
+      function loadHash(){
+        var hash = window.location.hash.replace('#','');
+        if(hash && validTabs.indexOf(hash) !== -1){
+          var el = null;
+          document.querySelectorAll('.nav-item').forEach(function(n){
+            var oc = n.getAttribute('onclick');
+            if(oc && oc.includes("'" + hash + "'")) el = n;
+          });
+          nav(hash, el);
+        }
+      }
+      window.addEventListener('load', loadHash);
+      window.addEventListener('hashchange', loadHash);
+    })();
+  </script>
 </body>
 </html>

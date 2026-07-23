@@ -669,6 +669,7 @@ function nav(id,el){
   if(pg)pg.classList.add('active');
   if(el&&el.classList){el.classList.add('active');}
   else{document.querySelectorAll('.nav-item').forEach(n=>{var oc=n.getAttribute('onclick');if(oc&&oc.includes("'"+id+"'"))n.classList.add('active');});}
+  if(id==='home')setTimeout(initHomeAnnouncements,0);
 }
 
 function openDoc(name,category,docId){
@@ -766,6 +767,49 @@ document.getElementById('sync-time').textContent=t.toLocaleDateString('en-US',{m
       window.addEventListener('load', loadHash);
       window.addEventListener('hashchange', loadHash);
     })();
+  </script>
+  <script>
+    function initHomeAnnouncements(){
+      var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var now=new Date();
+      var curMonth=months[now.getMonth()];
+      var curYear=now.getFullYear().toString();
+      var alist=document.querySelector('#page-home .alist');
+      if(!alist)return;
+      var cards=Array.from(alist.querySelectorAll('.acard'));
+      var older=[];
+      cards.forEach(function(card){
+        var meta=(card.querySelector('.ameta')||{}).textContent||'';
+        var isCurrent=(meta.indexOf(curMonth)!==-1&&meta.indexOf(curYear)!==-1);
+        if(isCurrent){card.style.display='';}
+        else{card.style.display='none';older.push(card);}
+      });
+      var existing=alist.querySelector('.home-see-more');
+      if(existing)existing.remove();
+      if(older.length>0){
+        var btn=document.createElement('div');
+        btn.className='home-see-more';
+        btn.style.cssText='text-align:center;padding:4px 0 2px';
+        btn.innerHTML='<span onclick="toggleHomeOlder(this)" style="font-size:12px;color:var(--orange);cursor:pointer;font-weight:500">See more ▾</span>';
+        alist.appendChild(btn);
+      }
+    }
+    function toggleHomeOlder(el){
+      var alist=document.querySelector('#page-home .alist');
+      var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var now=new Date();
+      var curMonth=months[now.getMonth()];
+      var curYear=now.getFullYear().toString();
+      var cards=Array.from(alist.querySelectorAll('.acard'));
+      var older=cards.filter(function(c){
+        var meta=(c.querySelector('.ameta')||{}).textContent||'';
+        return!(meta.indexOf(curMonth)!==-1&&meta.indexOf(curYear)!==-1);
+      });
+      var hidden=older.length>0&&older[0].style.display==='none';
+      older.forEach(function(c){c.style.display=hidden?'':' none';});
+      el.textContent=hidden?'See less ▴':'See more ▾';
+    }
+    window.addEventListener('load',initHomeAnnouncements);
   </script>
 </body>
 </html>

@@ -782,6 +782,9 @@ document.getElementById('sync-time').textContent=t.toLocaleDateString('en-US',{m
       var now=new Date();
       var curMonth=months[now.getMonth()];
       var curYear=now.getFullYear().toString();
+      var nextIdx=(now.getMonth()+1)%12;
+      var nextMonth=months[nextIdx];
+      var nextYear=(now.getMonth()===11?(now.getFullYear()+1):now.getFullYear()).toString();
       var alist=document.querySelector('#page-home .alist');
       if(!alist)return;
       var cards=Array.from(alist.querySelectorAll('.acard'));
@@ -789,7 +792,8 @@ document.getElementById('sync-time').textContent=t.toLocaleDateString('en-US',{m
       cards.forEach(function(card){
         var meta=(card.querySelector('.ameta')||{}).textContent||'';
         var isCurrent=(meta.indexOf(curMonth)!==-1&&meta.indexOf(curYear)!==-1);
-        if(isCurrent){card.style.display='';}
+        var isNext=(meta.indexOf(nextMonth)!==-1&&meta.indexOf(nextYear)!==-1);
+        if(isCurrent||isNext){card.style.display='';}
         else{card.style.display='none';older.push(card);}
       });
       var existing=alist.querySelector('.home-see-more');

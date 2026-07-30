@@ -204,7 +204,7 @@
     <div id="page-announcements" class="page">
       <div class="page-header"><div class="page-titles"><div class="page-title">Announcements</div><div class="page-subtitle">Company-wide updates from leadership and teams</div></div></div>
       <div class="alist">
-        <div class="acard"><div class="adot"></div><div style="flex:1"><div class="atitle">Communications Coaching — August 24th</div><div class="ameta">Aug 2026</div><div class="abody">Communications Coaching session is on <strong style="color:var(--text)">Sunday, August 24th</strong>.</div></div></div>
+        <div class="acard"><div class="adot"></div><div style="flex:1"><div class="atitle">Communications Coaching — August 24th</div><div class="ameta">Aug 2026</div><div class="abody">Communications Coaching session is on <strong style="color:var(--text)">Monday, August 24th</strong>.</div></div></div>
         <div class="acard"><div class="adot"></div><div style="flex:1"><div class="atitle">Dan OOO — August 31st–September 7th</div><div class="ameta">Aug 2026</div><div class="abody">Dan is out of office from <strong style="color:var(--text)">August 31st through September 7th</strong>.</div></div></div>
         <div class="acard"><div class="adot"></div><div style="flex:1"><div class="atitle">No Team Meeting in August</div><div class="ameta">Aug 2026</div><div class="abody">There is no Team Meeting in August.</div></div></div>
         <div class="acard"><div class="adot"></div><div style="flex:1"><div class="atitle">🎂 Happy Birthday, Dan!</div><div class="ameta">Jul 2026</div><div class="abody">Dan's birthday is <strong style="color:var(--text)">July 26th</strong>. Wish him a happy birthday!</div></div></div>
@@ -777,24 +777,31 @@ document.getElementById('sync-time').textContent=t.toLocaleDateString('en-US',{m
     })();
   </script>
   <script>
-    function initHomeAnnouncements(){
+    function isPastCard(meta){
       var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       var now=new Date();
-      var curMonth=months[now.getMonth()];
-      var curYear=now.getFullYear().toString();
-      var nextIdx=(now.getMonth()+1)%12;
-      var nextMonth=months[nextIdx];
-      var nextYear=(now.getMonth()===11?(now.getFullYear()+1):now.getFullYear()).toString();
+      var curIdx=now.getMonth();
+      var curYear=now.getFullYear();
+      for(var i=0;i<months.length;i++){
+        if(meta.indexOf(months[i])!==-1){
+          var yearMatch=meta.match(/\d{4}/);
+          var cardYear=yearMatch?parseInt(yearMatch[0]):curYear;
+          if(cardYear<curYear)return true;
+          if(cardYear===curYear&&i<curIdx)return true;
+          return false;
+        }
+      }
+      return false;
+    }
+    function initHomeAnnouncements(){
       var alist=document.querySelector('#page-home .alist');
       if(!alist)return;
       var cards=Array.from(alist.querySelectorAll('.acard'));
       var older=[];
       cards.forEach(function(card){
         var meta=(card.querySelector('.ameta')||{}).textContent||'';
-        var isCurrent=(meta.indexOf(curMonth)!==-1&&meta.indexOf(curYear)!==-1);
-        var isNext=(meta.indexOf(nextMonth)!==-1&&meta.indexOf(nextYear)!==-1);
-        if(isCurrent||isNext){card.style.display='';}
-        else{card.style.display='none';older.push(card);}
+        if(isPastCard(meta)){card.style.display='none';older.push(card);}
+        else{card.style.display='';}
       });
       var existing=alist.querySelector('.home-see-more');
       if(existing)existing.remove();
@@ -808,17 +815,13 @@ document.getElementById('sync-time').textContent=t.toLocaleDateString('en-US',{m
     }
     function toggleHomeOlder(el){
       var alist=document.querySelector('#page-home .alist');
-      var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      var now=new Date();
-      var curMonth=months[now.getMonth()];
-      var curYear=now.getFullYear().toString();
       var cards=Array.from(alist.querySelectorAll('.acard'));
       var older=cards.filter(function(c){
         var meta=(c.querySelector('.ameta')||{}).textContent||'';
-        return!(meta.indexOf(curMonth)!==-1&&meta.indexOf(curYear)!==-1);
+        return isPastCard(meta);
       });
       var hidden=older.length>0&&older[0].style.display==='none';
-      older.forEach(function(c){c.style.display=hidden?'':' none';});
+      older.forEach(function(c){c.style.display=hidden?'':'none';});
       el.textContent=hidden?'See less ▴':'See more ▾';
     }
     window.addEventListener('load',initHomeAnnouncements);
